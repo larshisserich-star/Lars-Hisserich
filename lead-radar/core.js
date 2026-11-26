@@ -6,7 +6,9 @@ const L=(de,en)=>LANG==="en"?en:de;
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeUrl=u=>/^https:\/\//i.test(String(u||""))?String(u):null;
 const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-const today=()=>iso(new Date()); const plus=n=>{const d=new Date(); d.setDate(d.getDate()+n); return iso(d)};
+let ZR=0; const zrOff=()=>MODE==="sim"?ZR:0;   /* Zeitraffer: nur im Simulationsmodus, Standard 0 (aus) */
+const realToday=()=>iso(new Date()); const today=()=>plus(0); const plus=n=>{const d=new Date(); d.setDate(d.getDate()+n+zrOff()); return iso(d)};
+const addDays=(s,n)=>{ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||""); if(!m) return ""; const d=new Date(+m[1],+m[2]-1,+m[3]); d.setDate(d.getDate()+n); return iso(d) };
 const fmtD=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s||""); if(!m) return s||""; return LANG==="en"?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):`${m[3]}.${m[2]}.${m[1]}`};
 const pkt=n=>{const s=(Math.round(n*100)/100).toFixed(2); return LANG==="en"?s:s.replace(".",",")};
 const nf=n=>Number(n).toLocaleString(LANG==="en"?"en-GB":"de-DE");
@@ -33,7 +35,7 @@ let db=null, sample=null, canWrite=true, loaded=false, VIEW="heute", DLG=null;
 let ZF={q:"",f:"offen",s:"score"}, PA={tab:"entwurf",q:""};
 let F=[], T=[], D={}, Q={}, LR=[], N=[], TEAM=[], A=aClean({}), OB={drafts:[],approved:[]}; const EDIT={};
 /* Rohdaten (FR Firmen, TK Aufgaben, NR Nachrichten) und Ansicht (F, T, N): je nach Modus Echt oder Simulation. */
-let FR=[], TK=[], NR=[], PROT=[], TRN=[], LS={}, RESET_ARM=0;
+let FR=[], TK=[], NR=[], PROT=[], TRN=[], LS={}, RESET_ARM=0, GP=[];
 let MODE="sim"; try{ MODE=localStorage.getItem("lr-mode")==="echt"?"echt":"sim" }catch(e){}   /* Standard: Simulation */
 const cl=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
 /* Simulation: Die echten Felder einer Firma bleiben unberührt. Im Modus sim ist f eine Kopie, in der Felder aus f.sim liegen; f._real ist das Original. */
@@ -147,17 +149,67 @@ function vorlage0(f,p){ const e=en_(), k=e?1:0, bk=ANG_ZU[p.bereich]?p.bereich:"
   const betreff=e?({HR:`Meeting students from Giessen early: an idea for ${f.name}`,Vertrieb:`Fresh data for sales at ${f.name}`}[bk]||`Working with JLU Giessen: an idea for ${f.name}`)
     :({HR:`Nachwuchs aus Gießen früh kennenlernen: eine Idee für ${f.name}`,Vertrieb:`Frische Daten für den Vertrieb bei ${f.name}`}[bk]||`Zusammenarbeit mit der JLU Gießen: eine Idee für ${f.name}`);
   return {kanal,betreff,text,sprache:e?"en":"de"} }
-function nachfass(m){ const e=m.sprache==="en", kanal=m.kanal==="req"?"msg":m.kanal;
-  return {kanal,sprache:e?"en":"de",betreff:kanal==="mail"?(e?"Following up: ":"Nachfrage: ")+String(m.betreff||(e?"Working with JLU Giessen":"Zusammenarbeit mit der JLU Gießen")).replace(/^(Nachfrage|Following up): /,""):"",
-    text:(e?[anredeFor({name:m.person},kanal,true),"","I wanted to follow up briefly on my message from a few days ago about working with the Chair of Sales Management at JLU Giessen. Would 20 minutes for a short call fit in the coming weeks?","If the topic is not relevant for you right now, a short note is enough and I will not get in touch again.","","Kind regards"]
-      :[anredeFor({name:m.person},kanal,false),"","ich wollte kurz an meine Nachricht von vor einigen Tagen erinnern, in der es um eine Zusammenarbeit mit der Professur für Vertriebsmanagement der JLU Gießen ging. Würden 20 Minuten für ein kurzes Telefonat in den nächsten Wochen passen?","Falls das Thema für Sie gerade nicht relevant ist, genügt eine kurze Rückmeldung, dann melde ich mich nicht wieder.","",kanal==="mail"?"Liebe Grüße":"Mit freundlichen Grüßen"]).concat(kanal==="mail"?sig():ICH).join("\n")} }
+/* Neuer Anlass für Folgemails: neueste Stelle (nur mit echter Quelle) nach der letzten Mail, sonst ein Angebot, das im Gespräch noch nicht vorkam. */
+function neuAnlass(f,m,e){ const k=e?1:0, since=String(m.versendet_am||m.erstellt_am||""), anr=ANG_ZU[m.bereich]||[];
+  const st=(f.stellen||[]).filter(s=>s.titel&&s.quelle&&String(s.datum||"")>since).sort((a,b)=>String(b.datum||"").localeCompare(String(a.datum||"")))[0];
+  if(st) return {id:"",neu:e?`New: ${f.name} is now looking for a ${st.titel}.`:`Neu: ${f.name} sucht jetzt eine Stelle als ${st.titel}.`,
+    satz:e?`Since then ${f.name} has advertised a position as ${st.titel}, and our students could help you find fitting candidates.`:`Inzwischen hat ${f.name} eine Stelle als ${st.titel} ausgeschrieben, und unsere Studierenden können helfen, passende Kandidatinnen und Kandidaten zu finden.`};
+  const used=new Set(N.filter(x=>x.firma_id===m.firma_id&&x.person_key===m.person_key&&x.merkmale).flatMap(x=>x.merkmale.angebote||[])), ids=Object.keys(ANG).filter(i=>!used.has(i)), id=ids.find(i=>anr.includes(i))||ids[0]||anr[0]||Object.keys(ANG)[0], a=ANG[id][k];
+  return {id,neu:e?`New: another offer, ${a[0]}.`:`Neu: ein weiteres Angebot, ${a[0]}.`,satz:e?`Another idea: ${a[0]}. ${a[1]}`:`Noch ein Gedanke: ${a[0]}. ${a[1]}`} }
+function nachfass(m,nr,f){ nr=nr===2?2:1; f=f||{}; const e=m.sprache==="en", kanal=m.kanal==="req"?"msg":m.kanal, p=(f.ansprechpartner||[]).find(x=>pk(x)===m.person_key)||{name:m.person}, an=neuAnlass(f,m,e);
+  const betreff=kanal==="mail"?(e?"Following up: ":"Nachfrage: ")+String(m.betreff||(e?"Working with JLU Giessen":"Zusammenarbeit mit der JLU Gießen")).replace(/^(Nachfrage|Following up): /,""):"";
+  const body=e?(nr===1?["I got in touch a few days ago about working with the Chair of Sales Management at JLU Giessen.",an.satz,"Would you have 20 minutes for a short call in the coming weeks?","If the topic does not fit right now, a short note is enough."]
+      :["One last note, with something new.",an.satz,"If a short call of 20 minutes makes sense for you, just reply.","After this we will not get in touch again, so your inbox stays quiet."])
+    :(nr===1?["ich hatte mich vor einigen Tagen mit einer Idee zur Zusammenarbeit mit der Professur für Vertriebsmanagement der JLU Gießen gemeldet.",an.satz,"Hätten Sie in den nächsten Wochen 20 Minuten Zeit für ein kurzes Telefonat?","Falls das Thema gerade nicht passt, genügt eine kurze Rückmeldung."]
+      :["zum Abschluss noch ein neuer Anlass.",an.satz,"Wenn ein kurzes Telefonat von 20 Minuten für Sie sinnvoll ist, antworten Sie einfach.","Danach melden wir uns nicht wieder, damit Ihr Postfach ruhig bleibt."]);
+  const text=[anredeFor(p,kanal,e),"",...body,"",e?"Kind regards":(kanal==="mail"?"Liebe Grüße":"Mit freundlichen Grüßen")].concat(kanal==="mail"?sig():ICH).join("\n");
+  return {kanal,sprache:e?"en":"de",betreff,text,neu:an.neu,nachfass_nr:nr,merkmale:{aufhaenger_typ:"sonstiges",angebote:an.id?[an.id]:[],laenge_woerter:wortzahl(body.join(" "))}} }
+/* Wiedervorlage: knüpft an die Bitte an und bringt etwas Neues. m = unsere Erstmail im Gespräch. */
+function wvText(f,m){ const e=m.sprache==="en", kanal=m.kanal==="req"?"msg":m.kanal, p=(f.ansprechpartner||[]).find(x=>pk(x)===m.person_key)||{name:m.person}, an=neuAnlass(f,m,e),
+    ein=N.filter(x=>x.richtung==="ein"&&x.firma_id===f.id&&x.person_key===m.person_key&&x.ergebnis==="spaeter").sort((a,b)=>String(a.erstellt_am||"").localeCompare(String(b.erstellt_am||""))).pop()||{}, bat=ein.erstellt_am||ein.antwort_am||"";
+  const body=e?[`You asked us to get back in touch at this time${bat?" (your message of "+fmtD(bat)+")":""}, and we are happy to do so.`,an.satz,"Would you have 20 minutes for a short call in the coming weeks?"]
+    :[`Sie hatten gebeten, dass wir uns zu diesem Zeitpunkt noch einmal melden${bat?" (Ihre Nachricht vom "+fmtD(bat)+")":""}. Das tun wir gern.`,an.satz,"Hätten Sie in den nächsten Wochen 20 Minuten Zeit für ein kurzes Telefonat?"];
+  const text=[anredeFor(p,kanal,e),"",...body,"",e?"Kind regards":(kanal==="mail"?"Liebe Grüße":"Mit freundlichen Grüßen")].concat(kanal==="mail"?sig():ICH).join("\n");
+  return {kanal,sprache:e?"en":"de",betreff:kanal==="mail"?(e?"Resubmission: ":"Wiedervorlage: ")+String(m.betreff||(e?"Working with JLU Giessen":"Zusammenarbeit mit der JLU Gießen")).replace(/^(Nachfrage|Following up|Wiedervorlage|Resubmission): /,""):"",text,neu:an.neu,merkmale:{aufhaenger_typ:"sonstiges",angebote:an.id?[an.id]:[],laenge_woerter:wortzahl(body.join(" "))}} }
+/* Weiterleitung: Erstmail an die genannte Person, mit Hinweis auf die verweisende Person („Frau X hat mich an Sie verwiesen“). */
+function weiterText(f,p,von){ const e=en_(), r=vorlage(f,p), a=anredeFor(von||{name:""},"mail",e).replace(/^(Sehr geehrte[r]? |Dear )/,"").replace(/,$/,""), ref=/^(Damen|Sir)/.test(a)||!a?(von&&von.name)||"":a,
+    satz=ref?(e?`${ref} referred me to you.`:`${ref} hat mich an Sie verwiesen.`):"";
+  if(satz){ if(r.kanal==="mail"){ const l=r.text.split("\n"); l.splice(2,0,satz,""); r.text=l.join("\n") } else { const hi=anredeFor(p,"req",e); r.text=r.text.replace(hi+" ",hi+" "+satz+" "); if(r.text.length>300) r.text=r.text.slice(0,300) } }
+  r.neu=satz; return r }
+const FOLGE_ART=()=>({nachfass1:L("1. Nachfassen","1st follow-up"),nachfass2:L("2. Nachfassen (letztes)","2nd follow-up (last)"),wiedervorlage:L("Wiedervorlage","Resubmission"),weiterleitung:L("Weiterleitung","Referral")});
+/* Alle geplanten Folgemails, auch zukünftige: {firma_id, firma, person, person_key, art, faellig_am, grund, folge_von, ausloeser}. Regeln: docs/PLAN-feedback-zyklus.md */
+function geplant(){ const out=[], dt=m=>String(m.versendet_am||m.erstellt_am||""), aus=N.filter(m=>m.richtung!=="ein"&&m.person_key&&m.status!=="verworfen"), ein=N.filter(m=>m.richtung==="ein"&&m.person_key&&m.ergebnis), keys=new Set(aus.map(m=>m.firma_id+"|"+m.person_key));
+  keys.forEach(key=>{ const [fid,pkey]=key.split("|"), f=F.find(x=>x.id===fid); if(!f||f._out) return;
+    const mine=aus.filter(m=>m.firma_id===fid&&m.person_key===pkey).sort((a,b)=>dt(a).localeCompare(dt(b))), erst=mine.find(m=>["erst","weiterleitung"].includes(m.typ)&&["versendet","antwort"].includes(m.status)); if(!erst) return;
+    const pp=(f.ansprechpartner||[]).find(x=>pk(x)===pkey)||{name:erst.person}, base={firma_id:fid,firma:f.name,person:erst.person,person_key:pkey,bereich:erst.bereich||pp.bereich||""};
+    if(gesperrt(f,pp)) return;
+    const ins=ein.filter(m=>m.firma_id===fid&&m.person_key===pkey).sort((a,b)=>String(a.erstellt_am||"").localeCompare(String(b.erstellt_am||""))), last=ins[ins.length-1];
+    if(last){ const von=last.erstellt_am||last.antwort_am||today();
+      if(last.ergebnis==="spaeter"){ if(N.some(x=>x.typ==="wiedervorlage"&&x.ausloeser===last.id&&x.status!=="verworfen")) return;
+        const wann=last.wiedervorlage_am||(f.status==="wv"&&f.wiedervorlage)||addDays(von,FOLGE.wv_tage);
+        out.push({...base,art:"wiedervorlage",faellig_am:wann,grund:L(`Weil ${erst.person} am ${fmtD(von)} um Wiedervorlage bat (fällig ${fmtD(wann)}).`,`Because ${erst.person} asked on ${fmtD(von)} for a resubmission (due ${fmtD(wann)}).`),folge_von:last.id,ausloeser:last.id,_m:erst}) }
+      else if(last.ergebnis==="falsche_person"){ if(N.some(x=>x.typ==="weiterleitung"&&x.ausloeser===last.id&&x.status!=="verworfen")) return;
+        const frei=q=>!gesperrt(f,q)&&pk(q)!==pkey&&kstat(f,q)==="Noch nicht angeschrieben"&&!aus.some(x=>x.firma_id===fid&&x.person_key===pk(q)), aps=f.ansprechpartner||[],
+          nm=fold(last.verweist_auf||""), ziel=(nm&&aps.find(q=>fold(q.name)===nm&&frei(q)))||aps.find(q=>fold(q.verwiesen_von||"")===fold(erst.person)&&frei(q))||aps.filter(q=>hrv(q)&&frei(q)).sort((a,b)=>(b.bereich===erst.bereich)-(a.bereich===erst.bereich))[0];
+        if(ziel) out.push({...base,person:ziel.name,person_key:pk(ziel),bereich:ziel.bereich||"",art:"weiterleitung",faellig_am:today(),grund:L(`Weil ${erst.person} am ${fmtD(von)} auf ${ziel.name} verwiesen hat.`,`Because ${erst.person} referred us to ${ziel.name} on ${fmtD(von)}.`),folge_von:last.id,ausloeser:last.id,_m:erst,_von:erst.person,_p:ziel});
+        else out.push({...base,art:"weiterleitung",faellig_am:today(),fehlt:true,grund:L(`Ansprechperson fehlt: ${erst.person} hat verwiesen, aber niemand genannt.`,`Contact missing: ${erst.person} referred us on but named nobody.`),folge_von:last.id,ausloeser:last.id,_m:erst}) }
+      return }
+    if(mine.some(m=>m.status==="antwort")||["Antwort erhalten","Gespräch vereinbart","Absage"].includes(kstat(f,pp))) return;
+    const nf=mine.filter(m=>m.typ==="nachfass"); if(nf.length>=FOLGE.nachfass_max||nf.some(m=>m.status==="entwurf"||m.status==="freigegeben")) return;
+    const l=nf.length?nf[nf.length-1]:erst; if(l.status!=="versendet"||!l.versendet_am) return;
+    const nr=nf.length+1, wann=addDays(l.versendet_am,nr===1?A.nachfassen_tage:FOLGE.nachfass2_tage);
+    out.push({...base,art:"nachfass"+nr,faellig_am:wann,grund:nr===1?L(`Keine Antwort auf die Mail vom ${fmtD(l.versendet_am)}.`,`No reply to the mail of ${fmtD(l.versendet_am)}.`):L(`Keine Antwort auf das 1. Nachfassen vom ${fmtD(l.versendet_am)}. Danach Ruhe.`,`No reply to the 1st follow-up of ${fmtD(l.versendet_am)}. Then no more mails.`),folge_von:l.id,ausloeser:l.id,_m:l,_nr:nr}) });
+  return out.sort((a,b)=>String(a.faellig_am).localeCompare(String(b.faellig_am))||String(a.firma).localeCompare(String(b.firma),"de")) }
 function outbox(){ const out={drafts:N.filter(m=>m.status==="entwurf"),approved:N.filter(m=>m.status==="freigegeben")};
-  const have=new Set(N.map(m=>m.firma_id+"|"+m.person_key+"|"+m.typ)), folge=new Set(N.map(m=>m.folge_von).filter(Boolean));
-  F.filter(f=>!f._out&&f.status==="shortlist").forEach(f=>{ [...(f.ansprechpartner||[])].sort((a,b)=>hrv(b)-hrv(a)).slice(0,A.kontakte_pro_firma).forEach(p=>{ if(gesperrt(f,p)||kstat(f,p)!=="Noch nicht angeschrieben"||have.has(f.id+"|"+pk(p)+"|erst")) return;
+  const have=new Set(N.map(m=>m.firma_id+"|"+m.person_key+"|"+m.typ));
+  F.filter(f=>!f._out&&f.status==="shortlist").forEach(f=>{ [...(f.ansprechpartner||[])].filter(p=>!p.verwiesen_von).sort((a,b)=>hrv(b)-hrv(a)).slice(0,A.kontakte_pro_firma).forEach(p=>{ if(gesperrt(f,p)||kstat(f,p)!=="Noch nicht angeschrieben"||have.has(f.id+"|"+pk(p)+"|erst")) return;
     out.drafts.push(virtDraft(f,p)) }) });
-  const lim=plus(-A.nachfassen_tage);
-  N.filter(m=>m.typ==="erst"&&m.status==="versendet"&&m.versendet_am&&m.versendet_am<=lim&&!folge.has(m.id)).forEach(m=>{ const f=F.find(x=>x.id===m.firma_id); if(!f||(((f.kontakte||{})[m.person_key])||{}).status!=="Angeschrieben") return;
-    out.drafts.push({id:"v-"+m.id+"-nach",virtuell:true,firma_id:f.id,firma:f.name,person:m.person,person_key:m.person_key,bereich:m.bereich||"",typ:"nachfass",quelle:"vorlage",status:"entwurf",folge_von:m.id,...nachfass(m)}) });
+  const cnt={}; N.filter(m=>m.typ==="nachfass"&&m.richtung!=="ein"&&m.status!=="verworfen").forEach(m=>{ const k=m.firma_id+"|"+m.person_key; cnt[k]=(cnt[k]||0)+1 });
+  const today_=today(); GP=geplant();
+  GP.filter(g=>g.faellig_am<=today_&&!g.fehlt).forEach(g=>{ const f=F.find(x=>x.id===g.firma_id), m=g._m, k=g.firma_id+"|"+g.person_key, b={virtuell:true,firma_id:g.firma_id,firma:g.firma,person:g.person,person_key:g.person_key,bereich:g.bereich,quelle:"vorlage",status:"entwurf",folge_von:g.folge_von,ausloeser:g.ausloeser,grund:g.grund}, tid=m.thread_id?{thread_id:m.thread_id}:{};
+    if(g.art==="nachfass1"||g.art==="nachfass2"){ if((cnt[k]||0)>=FOLGE.nachfass_max) return; cnt[k]=(cnt[k]||0)+1; out.drafts.push({...b,...tid,id:"v-"+m.id+"-nach"+g._nr,typ:"nachfass",...nachfass(m,g._nr,f)}) }
+    else if(g.art==="wiedervorlage") out.drafts.push({...b,...tid,id:"v-"+g.ausloeser+"-wv",typ:"wiedervorlage",...wvText(f,m)});
+    else if(g.art==="weiterleitung"){ const vp=(f.ansprechpartner||[]).find(x=>pk(x)===m.person_key)||{name:g._von}; out.drafts.push({...b,id:"v-"+g.ausloeser+"-wl",typ:"weiterleitung",...weiterText(f,g._p,vp)}) } });
   return out }
 const virtDraft=(f,p)=>({id:"v-"+f.id+"-"+pk(p),virtuell:true,firma_id:f.id,firma:f.name,person:p.name,person_key:pk(p),bereich:p.bereich||"",typ:"erst",quelle:"vorlage",status:"entwurf",...vorlage(f,p)});
 const allMsgs=()=>[...OB.drafts.filter(m=>m.virtuell),...N];
@@ -184,15 +236,15 @@ async function simReset(){ const chunk=async(items,fn)=>{ const ok=[]; for(let i
   const dF=await chunk(FR.filter(f=>"sim" in f),async f=>{ const o={...f}; delete o.sim; const ok=await put("firmen/"+f.id,o); if(ok) delete f.sim; return ok });
   const lsOk=Object.keys(LS).length?await del("lernen/stand"):true; if(lsOk) LS={};
   const sN=new Set(dN),sT=new Set(dT),sP=new Set(dP),sX=new Set(dX); NR=NR.filter(x=>!sN.has(x)); TK=TK.filter(x=>!sT.has(x)); PROT=PROT.filter(x=>!sP.has(x)); TRN=TRN.filter(x=>!sX.has(x));
-  tot.n=dN.length+dT.length+dP.length+dX.length+dF.length; lernReset(); render();
+  tot.n=dN.length+dT.length+dP.length+dX.length+dF.length; ZR=0; await put("einstellungen/zeitraffer",{tage:0,seit:realToday(),von:ICH||""}); lernReset(); render();
   const all=NR.some(m=>m.sim)||TK.some(t=>t.sim)||PROT.some(x=>x.sim)||TRN.length||FR.some(f=>"sim" in f)||!lsOk;
   toast(all?L("Nicht alles ließ sich löschen. Bitte noch einmal versuchen.","Not everything could be deleted. Please try again."):L("Simulation zurückgesetzt","Simulation reset")) }
 async function request(f){ if(D[f.id]||(Q[f.id]&&!Q[f.id].erledigt)) return; const a={firma_id:f.id,firma:f.name,angefordert:today(),von:ICH||"",herkunft:f.status==="shortlist"?"shortlist":"klick"}; if(await put("auftraege/"+f.id,a)) Q[f.id]=a }
 function setK(f,key,status,kanal){ f.kontakte=f.kontakte||{}; const old=f.kontakte[key]||{}; f.kontakte[key]={...old,status,datum:today(),wer:ICH||old.wer||"",...(kanal?{kanal}:{})} }
-async function markSent(m){ const f=F.find(x=>x.id===m.firma_id); if(!f) return; const nach=m.typ==="nachfass", kn=m.kanal==="mail"?"E-Mail":"LinkedIn";
+async function markSent(m){ const f=F.find(x=>x.id===m.firma_id); if(!f) return; const nach=m.typ!=="erst", kn=m.kanal==="mail"?"E-Mail":"LinkedIn";
   const d=msgDoc(m,"versendet",{versendet_am:today(),versendet_von:ICH||""}); if(!(await saveN(d))) return; delete EDIT[m.id];
-  (f.updates=f.updates||[]).push({id:uid("u"),datum:today(),wer:ICH||"",kanal:kn,text:`${nach?"Nachfassen":"Erstansprache"}${m.person?" an "+m.person:""} verschickt (${kn}).`});
-  if(m.person_key) setK(f,m.person_key,nach?"Nachgefasst":"Angeschrieben",kn);
+  (f.updates=f.updates||[]).push({id:uid("u"),datum:today(),wer:ICH||"",kanal:kn,text:`${m.typ==="wiedervorlage"?"Wiedervorlage":m.typ==="weiterleitung"?"Weiterleitung":nach?"Nachfassen":"Erstansprache"}${m.person?" an "+m.person:""} verschickt (${kn}).`});
+  if(m.person_key) setK(f,m.person_key,m.typ==="nachfass"||m.typ==="wiedervorlage"?"Nachgefasst":"Angeschrieben",kn);
   if(f.status!=="kontakt"){ f.status="kontakt"; f.stufe="Angesprochen"; f.status_seit=today() }
   if(!nach) await addTask({titel:`Nachfassen bei ${f.name}${m.person?" ("+m.person+")":""}`,owner:ICH||"",faellig:plus(A.nachfassen_tage),firma_id:f.id,automatisch:true});
   await saveF(f,L(`${f.name} ist jetzt im Kontakt`,`${f.name} is now in contact`)) }

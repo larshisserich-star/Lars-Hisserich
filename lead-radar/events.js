@@ -57,6 +57,7 @@ document.addEventListener("click",async e=>{
     A=aClean({...A,sim_aktiv:g("sim_aktiv").checked,sim_tageslimit:nv("sim_tageslimit"),sim_training_pro_lauf:nv("sim_training_pro_lauf"),ab_test:g("ab_test").checked,lernen_in_rangliste:g("lernen_in_rangliste").checked});
     if(await put("einstellungen/automatik",A)) toast(L("Für alle gespeichert","Saved for everyone")); return render() }
   if(act==="sim-reset"){ if(RESET_ARM&&Date.now()-RESET_ARM<6000){ RESET_ARM=0; return simReset() } RESET_ARM=Date.now(); setTimeout(()=>{ if(RESET_ARM&&Date.now()-RESET_ARM>=6000){ RESET_ARM=0; render() } },6100); return render() }
+  if(act==="zr-plus"||act==="zr-aus"){ const old=ZR, nz=act==="zr-aus"?0:Math.min(365,ZR+(+b.dataset.tage||0)); ZR=nz; if(await put("einstellungen/zeitraffer",{tage:ZR,seit:realToday(),von:ICH||""})){ compute(); render(); toast(ZR?L(`Zeitraffer +${ZR} Tage`,`Time lapse +${ZR} days`):L("Zurück in der echten Zeit","Back in real time")) } else ZR=old; return }
   if(act==="team-add"){ const n=$("#team-n").value.trim(); if(!n||TEAM.includes(n)) return; TEAM.push(n); if(await put("einstellungen/team",{namen:TEAM})) toast(L("Team gespeichert","Team saved")); return render() }
   if(act==="team-del"){ TEAM=TEAM.filter(x=>x!==b.dataset.n); if(await put("einstellungen/team",{namen:TEAM})) toast(L("Team gespeichert","Team saved")); return render() } });
 document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.id==="i-name"){ e.preventDefault(); document.querySelector("[data-act=ich-ok]").click(); return }
@@ -65,7 +66,8 @@ $("#dlg").addEventListener("close",()=>{ DLG=null });
 $("#dlg").addEventListener("cancel",e=>{ if(DLG&&DLG.t==="ich"&&!ICH) e.preventDefault() });
 
 /* ---------- Laden ---------- */
-async function load(){ const g=n=>db.collection(n).get(), g0=n=>g(n).catch(()=>({docs:[]})), [fs,ts,ds,qs,ls,ns,tm,au,pr,tr,le]=await Promise.all([g("firmen"),g("aufgaben"),g("dossier"),g("auftraege"),g("lauf"),g("nachrichten"),db.doc("einstellungen/team").get(),db.doc("einstellungen/automatik").get(),g0("protokoll"),g0("training"),db.doc("lernen/stand").get().catch(()=>({exists:false}))]);
+async function load(){ const g=n=>db.collection(n).get(), g0=n=>g(n).catch(()=>({docs:[]})), [fs,ts,ds,qs,ls,ns,tm,au,pr,tr,le,zr]=await Promise.all([g("firmen"),g("aufgaben"),g("dossier"),g("auftraege"),g("lauf"),g("nachrichten"),db.doc("einstellungen/team").get(),db.doc("einstellungen/automatik").get(),g0("protokoll"),g0("training"),db.doc("lernen/stand").get().catch(()=>({exists:false})),db.doc("einstellungen/zeitraffer").get().catch(()=>({exists:false}))]);
+  ZR=zr.exists?num(+((zr.data()||{}).tage),0,365,0):0;
   PROT=pr.docs.map(d=>({...d.data(),id:d.id})); TRN=tr.docs.map(d=>({...d.data(),id:d.id})); LS=le.exists?(le.data()||{}):{}; lernReset();
   FR=fs.docs.map(d=>({status:"ziel",...d.data(),id:d.id})).filter(f=>f.name); TK=ts.docs.map(d=>({...d.data(),id:d.id})); D={}; ds.docs.forEach(d=>{D[d.id]=d.data()}); Q={}; qs.docs.forEach(d=>{Q[d.id]={...d.data(),firma_id:d.id}});
   LR=ls.docs.map(d=>d.data()); NR=ns.docs.map(d=>({...d.data(),id:d.id})); TEAM=tm.exists?[...((tm.data()||{}).namen||[])]:[]; A=aClean(au.exists?au.data():{}); loaded=true }
