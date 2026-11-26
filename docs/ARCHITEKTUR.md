@@ -42,7 +42,7 @@ Die Läufe lesen/schreiben die Datenbank mit dem Tool `ArtifactData`. Nach Ände
 - `einstellungen/team` {namen[]}, `einstellungen/automatik` (Standardwerte in `config.js` → `A_DEF`).
 
 ## Lernen (in core.js, Formel-Parameter in config.js → LERNEN)
-Erfolg eines Kontakts: termin/interesse = 1, rueckfrage = 0,5, sonst 0 (keine Antwort nach `nachfassen_tage` = 0). Gewicht: echt × `LERNEN.gewicht_echt`, simuliert × 1.
+Erfolg eines Kontakts laut `config.js` → `LERNEN.erfolg` (termin/interesse 1, rueckfrage 0,5, spaeter 0,2, sonst 0; keine Antwort nach `nachfassen_tage` = 0). Gewicht: echt × `LERNEN.gewicht_echt`, simuliert × 1.
 Je Merkmal (branche, region, groesse, bereich, aufhaenger_typ, angebot) geglättete Quote `(pos + k·basis)/(n + k)`, k = `LERNEN.glaettung`. Lernzuschlag einer Firma = Summe der relativen Abweichungen ihrer Merkmale × `LERNEN.faktor`, begrenzt auf ±`LERNEN.max_zuschlag`. Grundpunktzahl (Gewichte Tobias Weiß) bleibt sichtbar; Rangliste = Grundpunktzahl + Lernzuschlag, wenn `lernen_in_rangliste`.
 
 ## Regeln, die immer gelten
