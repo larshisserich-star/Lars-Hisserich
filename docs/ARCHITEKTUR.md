@@ -9,6 +9,7 @@ Professur in allen Texten: **„Professur für Vertriebsmanagement“** (EN „C
 | `config.js` | **Alle Stellschrauben**: Gewichte, Kriterien, Regionen, Branchen, Angebote, Modelle, Standardwerte der Automatik, Simulation, Lernen | Regeln, Modelle, Texte der Angebote, Grenzwerte ändern |
 | `index.html` | CSS (Design 1:1 nach etronixx-Muster, JLU-Blau) und Grundgerüst | Aussehen ändern |
 | `core.js` | Hilfsfunktionen, Zustand, Punktzahl, Signale, Wochenrunde, Vorlagen für Entwürfe, Speichern, KI-Aufrufe, Lernen | Logik ändern |
+| `radar.js` | Dashboard-Radar (interaktive Grafik, Filter, Rundgang) | Radar ändern |
 | `views.js` | Alle Ansichten und Dialoge, `render()` | Inhalt einer Seite ändern |
 | `events.js` | Klicks, Eingaben, Laden, Start | neue Knöpfe / Aktionen |
 | `tests/smoke.js` + `tests/seed.js` | Rauchtest mit Schein-Datenbank: `node lead-radar/tests/smoke.js --shots` | nach jeder Änderung |
@@ -17,7 +18,7 @@ Alle Skripte sind klassische `<script>`-Dateien im selben globalen Bereich (kein
 Sprache: alle Texte über `L("deutsch","english")`; Werte aus der Datenbank sind deutsch gespeichert, `lbl()` übersetzt.
 
 ## Veröffentlichen
-Artifact-Tool: `file_path` = `lead-radar/index.html`, `url` = Live-URL, `files` = `{"config.js": "lead-radar/config.js", "core.js": …, "views.js": …, "events.js": …}`. Fähigkeiten nicht angeben (bleiben erhalten).
+Artifact-Tool: `file_path` = `lead-radar/index.html`, `url` = Live-URL, `files` = `{"config.js": "lead-radar/config.js", "core.js": …, "radar.js": …, "views.js": …, "events.js": …}`. Fähigkeiten nicht angeben (bleiben erhalten).
 
 ## Automatik (geplante Aufgaben in Claude, Umgebung „Default“, freies Internet)
 | Aufgabe | ID | Zeit | Modell | Anweisung im Repo |

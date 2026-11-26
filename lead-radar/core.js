@@ -103,7 +103,15 @@ const wrDone=f=>f.runde_kw===isoWeek();
 
 /* ---------- Entwürfe ---------- */
 const en_=()=>A.entwurf_sprache==="en";
-function sig(){ if(!ICH) return ""; return en_()?`${ICH}\nChair of Sales Management\nJustus Liebig University Giessen`:`${ICH}\nProfessur für Vertriebsmanagement\nJustus-Liebig-Universität Gießen` }
+function sig(){ return en_()?"Team 3\nChair of Sales Management\nJustus Liebig University Giessen":"Team 3\nProfessur für Vertriebsmanagement\nJustus-Liebig-Universität Gießen" }
+const FEM=new Set("anja anna andrea angela angelika annette antje barbara bettina birgit brigitte carina carolin christina christine claudia cornelia daniela diana doris elisabeth eva franziska gabriele heike helena ines ingrid jana jessica julia juliane karin katharina kathrin katrin kerstin laura lena lisa maria marie marion martina melanie michaela monika nadine nicole nina petra sabine sandra sarah silke simone sonja stefanie stephanie susanne sylvia tanja ulrike ursula uta vanessa verena doreen yvonne manuela miriam hanna johanna lea leonie sophie".split(" "));
+const MAS=new Set("alexander andreas bernd christian christoph daniel dennis dirk dominik frank friedrich georg gerd hans heiko helmut jan jens joachim jochen johannes jörg jürgen karl kai klaus lars lukas manfred marc marco marcus mario markus martin matthias max michael mike nico niklas norbert oliver patrick paul peter philipp ralf rainer robert roland sebastian stefan steffen sven thomas thorsten tim tobias tom torsten udo ulrich uwe volker walter werner wolfgang felix florian fabian benjamin axel carsten holger bernhard rolf".split(" "));
+function anredeFor(p,kanal,e){ const n=String(p&&p.name||"").replace(/\b(dr|prof)\b\.?/gi," ").trim().split(/\s+/).filter(Boolean), vor=(n[0]||"").toLowerCase(), nach=n.length>1?n[n.length-1]:"";
+  const g=p&&p.geschlecht==="w"?"w":p&&p.geschlecht==="m"?"m":FEM.has(vor)?"w":MAS.has(vor)?"m":"";
+  const t=/\bprof\b/i.test(p&&p.name||"")?"Prof. ":/\bdr\b/i.test(p&&p.name||"")?"Dr. ":"";
+  if(e){ return g&&nach?`Dear ${g==="w"?"Ms":"Mr"} ${nach},`:"Dear Sir or Madam," }
+  if(!g||!nach) return kanal==="mail"?"Sehr geehrte Damen und Herren,":"Guten Tag,";
+  return kanal==="mail"?`Sehr geehrte${g==="w"?" Frau ":"r Herr "}${t}${nach},`:`Guten Tag ${g==="w"?"Frau":"Herr"} ${t}${nach},` }
 function nameV(n){ return String(n||"").replace(/\b(dr|prof)\b\.?/gi," ").trim().split(/\s+/)[0]||"" }
 function deriveMail(f,name){ if(!f.email_muster) return ""; const a=t=>String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z\-]/g,"");
   const t=String(name||"").replace(/\b(dr|prof|dipl|ing)\b\.?/gi," ").trim().split(/\s+/), V=a(t[0]), Nn=a(t.slice(1).join("")); if(!V||!Nn) return "";
@@ -124,8 +132,8 @@ const wortzahl=t=>String(t||"").trim().split(/\s+/).filter(Boolean).length;
 function vorlage(f,p){ const r=vorlage0(f,p), bk=ANG_ZU[p.bereich]?p.bereich:"Geschäftsführung", ids=(f.angebote&&f.angebote.length?f.angebote:ANG_ZU[bk]).filter(i=>ANG[i]).slice(0,2);
   r.merkmale={aufhaenger_typ:hookTyp(f),angebote:ids,laenge_woerter:wortzahl(r.text)}; return r }
 function vorlage0(f,p){ const e=en_(), k=e?1:0, bk=ANG_ZU[p.bereich]?p.bereich:"Geschäftsführung", ids=(f.angebote&&f.angebote.length?f.angebote:ANG_ZU[bk]).filter(i=>ANG[i]).slice(0,2);
-  const kanal=A.entwurf_kanal==="auto"?(f.email_muster?"mail":"req"):A.entwurf_kanal==="req"?"req":"mail", anrede=e?(p.name?`Dear ${p.name},`:"Hello,"):(p.name?`Guten Tag ${p.name},`:"Guten Tag,");
-  if(kanal==="req"){ const v=nameV(p.name), hi=e?(v?`Hello ${v},`:"Hello,"):(v?`Guten Tag ${v},`:"Guten Tag,"), n=ids[0]?ANG[ids[0]][k][1]:"";
+  const kanal=A.entwurf_kanal==="auto"?(f.email_muster?"mail":"req"):A.entwurf_kanal==="req"?"req":"mail", anrede=anredeFor(p,kanal==="mail"?"mail":"req",e);
+  if(kanal==="req"){ const v=nameV(p.name), hi=anredeFor(p,"req",e), n=ids[0]?ANG[ids[0]][k][1]:"";
     const who=e?`I work on a project at the Chair of Sales Management at JLU Giessen and am currently looking into ${f.name}.`:`ich arbeite in einem Projekt der Professur für Vertriebsmanagement der JLU Gießen und beschäftige mich gerade mit ${f.name}.`, ask=e?"I would be glad to connect.":"Ich würde mich freuen, mich mit Ihnen zu vernetzen.";
     const vs=[`${hi} ${who} ${n} ${ask}`,`${hi} ${who} ${ask}`]; return {kanal,betreff:"",text:vs.find(x=>x.length<=300)||vs[1],sprache:e?"en":"de"} }
   const text=(e?[anrede,"",satz(einstieg(f,p,true)),"",BRUECKE[bk][1],...ids.map(i=>`- ${ANG[i][1][0]}: ${ANG[i][1][1]}`),"",
@@ -135,14 +143,14 @@ function vorlage0(f,p){ const e=en_(), k=e?1:0, bk=ANG_ZU[p.bereich]?p.bereich:"
     :[anrede,"",einstieg(f,p,false),"",BRUECKE[bk][0],...ids.map(i=>`- ${ANG[i][0][0]}: ${ANG[i][0][1]}`),"",
       "Ich schreibe Ihnen im Rahmen eines studentischen Projekts an der Professur für Vertriebsmanagement der Justus-Liebig-Universität Gießen (Prof. Dr. Alexander Haas).","",
       "Hätten Sie in den nächsten Wochen 20 Minuten Zeit für ein kurzes Telefonat? Dann erzähle ich Ihnen, wie das konkret aussehen könnte, und höre gern, was Sie gerade beschäftigt.","",
-      "Falls bei Ihnen jemand anderes dafür zuständig ist, freue ich mich über einen kurzen Hinweis. Und wenn es gerade nicht passt, genügt eine kurze Absage.","","Mit freundlichen Grüßen",sig()]).join("\n");
+      "Falls bei Ihnen jemand anderes dafür zuständig ist, freue ich mich über einen kurzen Hinweis. Und wenn es gerade nicht passt, genügt eine kurze Absage.","","Liebe Grüße",sig()]).join("\n");
   const betreff=e?({HR:`Meeting students from Giessen early: an idea for ${f.name}`,Vertrieb:`Fresh data for sales at ${f.name}`}[bk]||`Working with JLU Giessen: an idea for ${f.name}`)
     :({HR:`Nachwuchs aus Gießen früh kennenlernen: eine Idee für ${f.name}`,Vertrieb:`Frische Daten für den Vertrieb bei ${f.name}`}[bk]||`Zusammenarbeit mit der JLU Gießen: eine Idee für ${f.name}`);
   return {kanal,betreff,text,sprache:e?"en":"de"} }
 function nachfass(m){ const e=m.sprache==="en", kanal=m.kanal==="req"?"msg":m.kanal;
   return {kanal,sprache:e?"en":"de",betreff:kanal==="mail"?(e?"Following up: ":"Nachfrage: ")+String(m.betreff||(e?"Working with JLU Giessen":"Zusammenarbeit mit der JLU Gießen")).replace(/^(Nachfrage|Following up): /,""):"",
-    text:(e?[m.person?`Dear ${m.person},`:"Hello,","","I wanted to follow up briefly on my message from a few days ago about working with the Chair of Sales Management at JLU Giessen. Would 20 minutes for a short call fit in the coming weeks?","If the topic is not relevant for you right now, a short note is enough and I will not get in touch again.","","Kind regards"]
-      :[m.person?`Guten Tag ${m.person},`:"Guten Tag,","","ich wollte kurz an meine Nachricht von vor einigen Tagen erinnern, in der es um eine Zusammenarbeit mit der Professur für Vertriebsmanagement der JLU Gießen ging. Würden 20 Minuten für ein kurzes Telefonat in den nächsten Wochen passen?","Falls das Thema für Sie gerade nicht relevant ist, genügt eine kurze Rückmeldung, dann melde ich mich nicht wieder.","","Mit freundlichen Grüßen"]).concat(kanal==="mail"?sig():ICH).join("\n")} }
+    text:(e?[anredeFor({name:m.person},kanal,true),"","I wanted to follow up briefly on my message from a few days ago about working with the Chair of Sales Management at JLU Giessen. Would 20 minutes for a short call fit in the coming weeks?","If the topic is not relevant for you right now, a short note is enough and I will not get in touch again.","","Kind regards"]
+      :[anredeFor({name:m.person},kanal,false),"","ich wollte kurz an meine Nachricht von vor einigen Tagen erinnern, in der es um eine Zusammenarbeit mit der Professur für Vertriebsmanagement der JLU Gießen ging. Würden 20 Minuten für ein kurzes Telefonat in den nächsten Wochen passen?","Falls das Thema für Sie gerade nicht relevant ist, genügt eine kurze Rückmeldung, dann melde ich mich nicht wieder.","",kanal==="mail"?"Liebe Grüße":"Mit freundlichen Grüßen"]).concat(kanal==="mail"?sig():ICH).join("\n")} }
 function outbox(){ const out={drafts:N.filter(m=>m.status==="entwurf"),approved:N.filter(m=>m.status==="freigegeben")};
   const have=new Set(N.map(m=>m.firma_id+"|"+m.person_key+"|"+m.typ)), folge=new Set(N.map(m=>m.folge_von).filter(Boolean));
   F.filter(f=>!f._out&&f.status==="shortlist").forEach(f=>{ [...(f.ansprechpartner||[])].sort((a,b)=>hrv(b)-hrv(a)).slice(0,A.kontakte_pro_firma).forEach(p=>{ if(gesperrt(f,p)||kstat(f,p)!=="Noch nicht angeschrieben"||have.has(f.id+"|"+pk(p)+"|erst")) return;

@@ -253,7 +253,7 @@ function vDashboard(){ const st=lernStats(), rows=st.rows.filter(r=>r.q!=="echt"
   const exs=LS.experimente||[], side=(l,t,n,pp)=>`<div class="ex"><span class="small"><b>${l}</b> ${esc(t||"")}</span><div class="bar" role="img" aria-label="${l}: ${n?Math.round(pp/n*100):0} %"><i style="width:${n?Math.round(pp/n*100):0}%"></i></div><span class="small">${pp||0} ${L("von","of")} ${n||0} · ${n?Math.round(pp/n*100):0} %</span></div>`;
   const exp=tafel(L("Experimente (A/B)","Experiments (A/B)"),L("Je Experiment eine klare Frage, zwei Varianten.","One clear question per experiment, two variants."),exs.length?exs.map(e=>`<div class="expt"><div class="row"><b>${esc(tx(e,"frage"))}</b>${e.status==="entschieden"?chip("acc","check",L("entschieden","decided")):chip("warn","clock",L("läuft","running"))}</div>${side("A",e.A,e.n_A,e.pos_A)}${side("B",e.B,e.n_B,e.pos_B)}${e.ergebnis?`<p class="small" style="margin:6px 0 0">${esc(tx(e,"ergebnis"))}</p>`:""}</div>`).join(""):`<p class="empty">${L("Noch kein Experiment.","No experiment yet.")}</p>`);
   const wb=tafel(L("Wochenbericht","Weekly report"),"",LS.wochenbericht?`<div class="pre">${esc(tx(LS,"wochenbericht"))}</div>`:`<p class="empty">${L("Noch kein Wochenbericht. Er entsteht freitags.","No weekly report yet. It is written on Fridays.")}</p>`);
-  return `${kp}<section class="part">${verlauf}</section><section class="part">${prot}</section><section class="part">${lern}</section><section class="part">${exp}</section><section class="part">${wb}</section>
+  return heroHtml()+`${kp}<section class="part">${verlauf}</section><section class="part">${prot}</section><section class="part">${lern}</section><section class="part">${exp}</section><section class="part">${wb}</section>
   <section class="part"><div class="hint warn"><span>${L("Das Dashboard zeigt nur die Simulation. Die Ergebnisse beruhen auf den Annahmen in config.js (SIM), nichts davon ist echt.","The dashboard shows the simulation only. Results rest on the assumptions in config.js (SIM); none of it is real.")}</span></div></section>` }
 
 /* ---------- Rendern ---------- */
@@ -265,7 +265,9 @@ function render(){ compute(); const TT=TITEL(), v=TT[VIEW]?VIEW:"heute";
   const av=$("#avatar"); av.textContent=ICH?ICH.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase():"?"; av.setAttribute("aria-label",ICH?L("Ich bin ","I am ")+ICH:L("Wer bist du?","Who are you?"));
   if(!loaded){ $("#view").innerHTML=`<p class="empty">${esc(render.msg?render.msg():L("Daten werden geladen …","Loading data …"))}</p>`; return }
   const act=document.activeElement, keep=act&&["zf-q","pa-q"].includes(act.id)?act.id:null, pos=keep?act.selectionStart:0;
+  if(HR.timer) heroStop();
   $("#view").innerHTML={heute:vHeute,dashboard:vDashboard,wochenrunde:vWochenrunde,zielfirmen:vZielfirmen,shortlist:vShortlist,funnel:vFunnel,postausgang:vPostausgang,einstellungen:vEinstellungen}[v]();
+  if(v==="dashboard") heroInit();
   if(keep){ const el=document.getElementById(keep); if(el){ el.focus(); try{ el.setSelectionRange(pos,pos) }catch(e){} } }
   if(DLG&&$("#dlg").open&&DLG.t!=="neu"&&DLG.t!=="ich"){ const sc=$("#dlg .dbody"), top=sc?sc.scrollTop:0; $("#dlg-c").innerHTML=dlgHtml(); const sc2=$("#dlg .dbody"); if(sc2) sc2.scrollTop=top } }
 function route(){ VIEW=location.hash.slice(1)||"heute"; if(!TITEL()[VIEW]) VIEW="heute"; render(); window.scrollTo(0,0) }

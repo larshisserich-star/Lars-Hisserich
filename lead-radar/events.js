@@ -15,6 +15,8 @@ document.addEventListener("change",async e=>{ const t=e.target;
 document.addEventListener("click",async e=>{
   const lg=e.target.closest("[data-lang]"); if(lg){ LANG=lg.dataset.lang; try{ localStorage.setItem("lr-lang",LANG) }catch(x){} if(DLG&&$("#dlg").open) $("#dlg-c").innerHTML=dlgHtml(); return render() }
   const md=e.target.closest("[data-mode]"); if(md){ MODE=md.dataset.mode==="sim"?"sim":"echt"; try{ localStorage.setItem("lr-mode",MODE) }catch(x){} RESET_ARM=0; if(DLG&&$("#dlg").open) $("#dlg").close(); return render() }
+  const hf=e.target.closest("[data-hf]"); if(hf){ HR.f=hf.dataset.hf; return heroApplyFilter() }
+  if(e.target.closest("[data-rdplay]")) return heroTour();
   const dbf=e.target.closest("[data-dbf]"); if(dbf){ DB.f=dbf.dataset.dbf; return render() }
   const c=e.target.closest("[data-close]"); if(c){ $("#dlg").close(); return }
   const pa=e.target.closest("[data-pa]"); if(pa){ PA.tab=pa.dataset.pa; if(pa.hasAttribute("data-closedlg")||$("#dlg").open) $("#dlg").close(); if(VIEW==="postausgang") render(); return }
@@ -74,3 +76,7 @@ async function start(){ addEventListener("hashchange",route); route(); if(!ICH) 
   window.claude.use("sample").then(s=>{ sample=s||null; if(loaded) render() }).catch(()=>{});
   try{ await load(); clearTimeout(timer); if(ICH&&!TEAM.includes(ICH)&&canWrite){ TEAM.push(ICH); await put("einstellungen/team",{namen:TEAM}) } render() }catch(e){ clearTimeout(timer); fail("Die Daten konnten nicht geladen werden. Bitte die Seite neu laden.","The data could not be loaded. Please reload the page.") } }
 start();
+
+document.addEventListener("mouseover",e=>{ const d=e.target.closest&&e.target.closest("#rd-svgw .rd-dot"); if(d&&!HR.timer) heroInfo(d.dataset.firma) });
+document.addEventListener("focusin",e=>{ const d=e.target.closest&&e.target.closest("#rd-svgw .rd-dot"); if(d&&!HR.timer) heroInfo(d.dataset.firma) });
+document.addEventListener("keydown",e=>{ const d=e.target.closest&&e.target.closest("#rd-svgw .rd-dot"); if(d&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); d.dispatchEvent(new MouseEvent("click",{bubbles:true})) } });

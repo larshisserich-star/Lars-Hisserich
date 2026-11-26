@@ -149,6 +149,16 @@ dialog::backdrop{background:rgba(0,0,0,.5)}
 .seg button:last-child{border-right:0} .seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink)}
 details summary{cursor:pointer;color:var(--accent);font-weight:600}
 .navg{padding-top:16px;margin-top:10px}
+.rd{background:#212121;border-color:#2c2c2c;color:#f2f2f2}.rd .thead h2,.rd .thead p{color:#f2f2f2}.rd .thead p{color:#b8b8b8}
+.rd-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:20px;align-items:start}
+@media(max-width:860px){.rd-body{grid-template-columns:1fr}}
+.rd-svg{width:100%;height:auto;max-height:640px;display:block}.rd-lb{fill:#8a8a8a;font-size:10px}.rd-rg{fill:#b8b8b8;font-size:12px;font-weight:600}
+.rd-dot{cursor:pointer;transition:opacity .25s}.rd-dot:hover .rd-sh,.rd-dot:focus .rd-sh,.rd-hi .rd-sh{stroke:#8fbbe8;stroke-width:3}.rd-dot:focus{outline:none}.rd-dot:focus .rd-sh{stroke:#fff}
+.rd-dim{opacity:.12}.rd-tour .rd-dot:not(.rd-hi){opacity:.35}.rd-hi{opacity:1!important}
+.rd-info{min-height:130px;margin-top:12px}.rd-card{border:1px solid #444;border-radius:8px;padding:12px;background:#181818}
+.rd-leg{list-style:none;padding:0;margin:12px 0 0;font-size:12px;color:#b8b8b8;display:grid;gap:3px}
+.rd .seg{border-color:#444}.rd .seg button{background:#181818;color:#f2f2f2;border-color:#444}.rd .seg button[aria-pressed="true"]{background:#8fbbe8;color:#000}
+.rd .btn{background:#181818;color:#f2f2f2;border-color:#555}.rd .btn.pri{background:#8fbbe8;color:#000;border-color:#8fbbe8}.rd .muted{color:#b8b8b8}
 </style>
 
 <div class="app">
@@ -176,5 +186,6 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600}
 
 <script src="config.js"></script>
 <script src="core.js"></script>
+<script src="radar.js"></script>
 <script src="views.js"></script>
 <script src="events.js"></script>
