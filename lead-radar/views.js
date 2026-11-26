@@ -5,12 +5,12 @@ const TITEL=()=>({heute:[L("Heute","Today"),L("Was jetzt dran ist. Alles andere 
   wochenrunde:[L("Wochenrunde","Weekly round"),L("Einmal pro Woche alle Firmen nacheinander durchgehen.","Go through all companies one after the other, once a week.")],
   zielfirmen:[L("Zielfirmen","Target companies"),L("Firmen in Hessen, sortiert nach Passung. Ein Klick öffnet das Firmenprofil.","Companies in Hesse, sorted by fit. A click opens the company profile.")],
   shortlist:[L("Shortlist","Shortlist"),L("Wen wir ansprechen und wie weit wir sind.","Whom we approach and how far we are.")],
-  funnel:[L("Automatik","Automation"),L("Was automatisch läuft und worauf gerade gewartet wird.","What runs automatically and what is being waited for.")],
+  funnel:[L("Funnel","Funnel"),L("Was automatisch läuft und worauf gerade gewartet wird.","What runs automatically and what is being waited for.")],
   postausgang:[L("Postausgang","Outbox"),L("Entwürfe, Versand und Antworten an einem Ort.","Drafts, sending and replies in one place.")],
   einstellungen:[L("Einstellungen","Settings"),L("Team, Automatik, Simulation und Regeln.","Team, automation, simulation and rules.")]});
 function navHtml(){ const pa=OB.drafts.length+OB.approved.length, wrO=wrPool().filter(f=>!wrDone(f)).length, a=(v,t,tag)=>`<a href="#${v}" data-v="${v}"${v===VIEW?' aria-current="page"':""}>${esc(t)}${tag?`<span class="tag">${esc(tag)}</span>`:""}</a>`;
   return `<div class="navg first">${L("Überblick","Overview")}</div>${a("heute",L("Heute","Today"))}${a("dashboard",L("Dashboard","Dashboard"))}${a("wochenrunde",L("Wochenrunde","Weekly round"),wrO&&signale().length?L("neu","new"):"")}
-  <div class="navg">${L("Firmen","Companies")}</div>${a("zielfirmen",L("Zielfirmen","Target companies"))}${a("shortlist","Shortlist")}${a("funnel",L("Automatik","Automation"))}
+  <div class="navg">${L("Firmen","Companies")}</div>${a("zielfirmen",L("Zielfirmen","Target companies"))}${a("shortlist","Shortlist")}${a("funnel","Funnel")}
   <div class="navg">${L("Ansprache","Outreach")}</div>${a("postausgang",L("Postausgang","Outbox"),pa||"")}
   <div class="navg">${L("Mehr","More")}</div>${a("einstellungen",L("Einstellungen","Settings"))}` }
 function nextRun(){ const n=new Date(); let d=new Date(); const early=n.getHours()<7||(n.getHours()===7&&n.getMinutes()<15); if(!(early&&d.getDay()%6)){ do{ d.setDate(d.getDate()+1) }while(d.getDay()%6===0) } return iso(d) }
