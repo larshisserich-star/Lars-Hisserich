@@ -34,7 +34,7 @@ let ZF={q:"",f:"offen",s:"score"}, PA={tab:"entwurf",q:""};
 let F=[], T=[], D={}, Q={}, LR=[], N=[], TEAM=[], A=aClean({}), OB={drafts:[],approved:[]}; const EDIT={};
 /* Rohdaten (FR Firmen, TK Aufgaben, NR Nachrichten) und Ansicht (F, T, N): je nach Modus Echt oder Simulation. */
 let FR=[], TK=[], NR=[], PROT=[], TRN=[], LS={}, RESET_ARM=0;
-let MODE="echt"; try{ MODE=localStorage.getItem("lr-mode")==="sim"?"sim":"echt" }catch(e){}
+let MODE="sim"; try{ MODE=localStorage.getItem("lr-mode")==="echt"?"echt":"sim" }catch(e){}   /* Standard: Simulation */
 const cl=o=>o===undefined?undefined:JSON.parse(JSON.stringify(o));
 /* Simulation: Die echten Felder einer Firma bleiben unberührt. Im Modus sim ist f eine Kopie, in der Felder aus f.sim liegen; f._real ist das Original. */
 function overlay(r){ const s=r.sim&&typeof r.sim==="object"?r.sim:{}, o={...r,_real:r};
