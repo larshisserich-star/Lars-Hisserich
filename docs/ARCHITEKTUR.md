@@ -23,7 +23,7 @@ Artifact-Tool: `file_path` = `lead-radar/index.html`, `url` = Live-URL, `files` 
 | Aufgabe | ID | Zeit | Modell | Anweisung im Repo |
 |---|---|---|---|---|
 | Suchlauf | `trig_01EhoKHAKdEoY9LWPXJ19k8U` | werktags 7:13 | Sonnet | `prompts/suchlauf.md` |
-| Simulationslauf | siehe `prompts/simulation.md` | werktags mehrmals | Sonnet, Haiku für Personas | `prompts/simulation.md` |
+| Simulationslauf | `trig_013xBndhh3Hojd3SJ8NU4Dt3` | werktags 10:43, 13:43, 16:43 | Sonnet, Haiku für Personas | `prompts/simulation.md` |
 Die Läufe lesen/schreiben die Datenbank mit dem Tool `ArtifactData`. Nach Änderung einer Anweisung: Datei im Repo ändern **und** `update_trigger` mit demselben Text.
 
 ## Datenmodell (Sammlungen der Artefakt-Datenbank)

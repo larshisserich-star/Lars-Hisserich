@@ -23,7 +23,6 @@ const ANG={talent:[["Talentvermittlung","Sie bekommen vorausgewählte Kandidatin
   insights:[["Marketing Insights","Sie bekommen eine Studie, die genau Ihre Frage beantwortet, als Entscheidungshilfe."],["Marketing Insights","You get a study that answers exactly your question, as decision support."]],
   lab:[["Marketing Innovation Lab","Rund 20 abschlussnahe Studierende erarbeiten in etwa vier Monaten Daten und neue Lösungen zu Ihrer Frage."],["Marketing Innovation Lab","About 20 students close to graduation spend roughly four months building data and new solutions for your question."]]};
 const ANG_ZU={HR:["talent","vortraege","master"],Vertrieb:["academy","insights","lab"],"Geschäftsführung":["insights","lab","academy"]};
-/* Modellwechsel: Opus denkt, Sonnet schreibt */
 /* KI-Modelle auf der Seite: Sonnet denkt und schreibt, Haiku für schnelle Massenaufgaben (günstig). Fällt ein Modell aus, nimmt die Plattform die passende Stufe. */
 const MODELL={denken:{model:"claude-sonnet-5-5",modelTier:"default",effort:"high"},schreiben:{model:"claude-sonnet-5-5",modelTier:"default",effort:"medium"},schnell:{model:"claude-haiku-5-5",modelTier:"quick",effort:"low"}};
 
