@@ -6,7 +6,7 @@ Ziel: Jede Nachricht hat eine nächste Handlung mit Datum. Jede Folgemail bringt
 ## Regeln (verbindlich)
 | Ergebnis | Handlung (Typ der Nachricht) | Fällig |
 |---|---|---|
-| keine Antwort | 1. Nachfassen `nachfass`, 40–70 Wörter, neuer Gedanke | Erstmail + `nachfassen_tage` (7) |
+| keine Antwort | 1. Nachfassen `nachfass`, 40–90 Wörter, neuer Gedanke | Erstmail + `nachfassen_tage` (7) |
 | weiter keine | 2. und letztes Nachfassen `nachfass`, neuer Anlass (neueste Stelle aus `stellen`, sonst anderes Angebot), „danach melden wir uns nicht wieder“; dann Ruhe | 1. Nachfassen + `FOLGE.nachfass2_tage` (14) |
 | später | `wiedervorlage`: knüpft an („Sie hatten gebeten …“) und bringt etwas Neues | genanntes Datum, sonst + `FOLGE.wv_tage` (60) |
 | falsche Person | `weiterleitung` an genannte Person („Frau X hat mich an Sie verwiesen“); keine genannt: nächste HR-/Vertriebsperson ohne Kontakt; sonst Vermerk „Ansprechperson fehlt“ | nächster Lauf |

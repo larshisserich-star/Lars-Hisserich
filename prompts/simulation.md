@@ -128,3 +128,9 @@ Am Ende kurz zusammenfassen: Simulation an/aus, neue simulierte Versendungen (vo
 
 ## Anrede und Gruß (gilt für alle Mails)
 Mail: „Sehr geehrte Frau Nachname,“ / „Sehr geehrter Herr Nachname,“ (nie Vorname, nie „Guten Tag“); Gruß „Liebe Grüße“, darunter „Team 3“. LinkedIn: „Guten Tag Frau/Herr Nachname,“. Ist das Geschlecht unklar: „Sehr geehrte Damen und Herren,“ (Mail) bzw. „Guten Tag,“.
+
+## Inhalt der Mails (gilt für Erstmail, Nachfassen und Antworten)
+- **Vorteile statt Fähigkeiten:** Nie nur sagen, was die Professur kann. Sagen, was der Firma der Vorteil bringt und was ihr ohne das fehlt (z. B. „Stelle schneller besetzt statt monatelang offen“).
+- **HR** will Stellen schnell mit passenden Personen besetzen: Tempo und Vorauswahl betonen. **Vertrieb** will gut ausgebildete Leute, die zum Team passen: Qualität und Passung betonen, Fehlbesetzung kostet Zeit und Kunden.
+- **Partnerprogramm:** Die Professur versteht sich als Partnerprogramm zwischen Universität und Unternehmen; Partner bekommen laufend Neues (Ideen, Wissen, Nachwuchs). Belegte Fakten stehen in `lernen/wissen`; nichts dazuerfinden.
+- **Antworten gehen einen Schritt weiter:** Jede Antwortmail beantwortet die Frage und schließt mit genau einem konkreten nächsten Schritt (zwei Terminvorschläge, ein passendes Material, eine Rückfrage zur Stelle), nie nur „gern melden“.

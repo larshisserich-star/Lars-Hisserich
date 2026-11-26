@@ -30,7 +30,7 @@ const mock=`(()=>{const store=(${SEED})(); window.__store=store;
       MODE="echt"; r.todayEcht=today()===realToday(); MODE="sim"; ZR=0; compute(); return r });
     const chk=(ok,msg)=>{ if(!ok) errs.push(name+': '+msg) };
     chk(fz.n1===1&&fz.n2===1,'Nachfassen 1/2 falsch: '+fz.ids); chk(fz.f7===0,'Person mit 2 Nachfassen bekommt Entwurf'); chk(fz.wv===1,'Wiedervorlage fehlt'); chk(fz.wl===1,'Weiterleitung fehlt'); chk(fz.maxNr<=2,'nachfass_nr > 2');
-    chk(fz.words.every(w=>w>=40&&w<=70),'Nachfassen 1 nicht 40-70 Wörter: '+fz.words); chk(fz.anrede,'Anrede nicht "Sehr geehrte"'); chk(fz.gruss,'Gruß/Team 3 fehlt'); chk(fz.f10Plan&&!fz.f10Due0,'Zeitraffer-Vorprüfung (Erstmail vor 1 Tag noch nicht fällig)');
+    chk(fz.words.every(w=>w>=40&&w<=90),'Nachfassen 1 nicht 40-90 Wörter: '+fz.words); chk(fz.anrede,'Anrede nicht "Sehr geehrte"'); chk(fz.gruss,'Gruß/Team 3 fehlt'); chk(fz.f10Plan&&!fz.f10Due0,'Zeitraffer-Vorprüfung (Erstmail vor 1 Tag noch nicht fällig)');
     chk(fz.f10Due7,'Zeitraffer +7: Nachfassen nicht fällig'); chk(fz.today7,'Zeitraffer wirkt nicht in Simulation'); chk(fz.todayEcht,'Echt-Modus sieht Zeitraffer'); chk(fz.refTxt,'Weiterleitungstext'); chk(fz.wvTxt,'Wiedervorlagetext'); chk(fz.n2Txt,'2. Nachfassen ohne "nicht wieder"'); chk(fz.test,'Adresse nicht .test');
     /* Bilder: Postausgang-Reiter, Einstellungen und Banner mit Zeitraffer +14; danach Knopf "Zurück zur echten Zeit" */
     await p.evaluate(()=>{ ZR=14; PA.tab="geplant"; location.hash="#postausgang"; render() }); await p.waitForTimeout(150);
